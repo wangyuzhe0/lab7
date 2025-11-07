@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: 331-backend
+  datasource:
+    url: jdbc:mysql://localhost:3307/selabdb?createDatabaseIfNotExist=true&autoReconnect=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        show_sql: true
+        format_sql: true
+  profiles:
+    active: db
+
+logging:
+  level:
+    org.hibernate: INFO  # 改为INFO减少日志输出
+    se331.lab: DEBUG

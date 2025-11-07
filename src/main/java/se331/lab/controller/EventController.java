@@ -9,12 +9,9 @@ import org.springframework.web.server.ResponseStatusException;
 import se331.lab.entity.Event;
 import se331.lab.service.EventService;
 
-import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
 public class EventController {
-
     final EventService eventService;
 
     @GetMapping("events")
@@ -22,24 +19,12 @@ public class EventController {
             @RequestParam(value = "_limit", required = false) Integer perPage,
             @RequestParam(value = "_page", required = false) Integer page) {
 
-        List<Event> output;
+        org.springframework.data.domain.Page<Event> pageOutput = eventService.getEvents(perPage, page);
         HttpHeaders responseHeader = new HttpHeaders();
 
-        // 获取事件总数
-        Integer eventSize = eventService.getEventSize();
-        responseHeader.set("x-total-count", String.valueOf(eventSize));
+        responseHeader.set("x-total-count", String.valueOf(pageOutput.getTotalElements()));
 
-        if (perPage == null && page == null) {
-            // 如果没有分页参数，返回所有事件
-            output = eventService.getEvents(null, null);
-        } else {
-            // 处理分页
-            perPage = perPage == null ? eventSize : perPage;
-            page = page == null ? 1 : page;
-            output = eventService.getEvents(perPage, page);
-        }
-
-        return new ResponseEntity<>(output, responseHeader, HttpStatus.OK);
+        return new ResponseEntity<>(pageOutput.getContent(), responseHeader, HttpStatus.OK);
     }
 
     @GetMapping("events/{id}")
@@ -49,6 +34,27 @@ public class EventController {
             return ResponseEntity.ok(output);
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The given id is not found");
+        }
+    }
+
+    @PostMapping("/events")
+    public ResponseEntity<?> addEvent(@RequestBody Event event) {
+        try {
+            System.out.println("Received event: " + event);
+
+            // 额外保护：确保新事件的 ID 为 null
+            if (event.getId() != null) {
+                event.setId(null);
+                System.out.println("Reset ID to null for new event");
+            }
+
+            Event output = eventService.save(event);
+            System.out.println("Saved event: " + output);
+            return ResponseEntity.ok(output);
+        } catch (Exception e) {
+            System.out.println("Error saving event: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
 }
